@@ -4,11 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "web": "pnpm --filter @ai-knowledge-base/web dev"
+    "dev:web": "pnpm --filter web dev",
+    "build:web": "pnpm --filter web build",
+    "lint:web": "pnpm --filter web lint",
+    "dev:api": "cd apps/ingest-api && uv run uvicorn ingest_api.main:app --reload --port 8000"
   },
+  "private": true,
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.17.0"
+  "packageManager": "pnpm@10.17.0",
+  "workspaces": ["apps/*", "packages/*"]
 }

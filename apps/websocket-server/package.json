@@ -1,7 +1,6 @@
 {
-  "name": "@ai-knowledge-base/ingest-api",
+  "name": "websocket-server",
   "version": "1.0.0",
-  "private": true,
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,5 +9,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.17.0"
+  "packageManager": "pnpm@10.17.0",
+  "dependencies": {
+    "we": "^1.5.10"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  }
 }
