@@ -1,11 +1,18 @@
 {
-  "files": [],
-  "references": [
-    { "path": "apps/web" }
-    // later you can add { "path": "apps/worker" }, { "path": "packages/shared-types" }, etc.
+  "name": "ai-knowledge-base",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
   ],
-  "compilerOptions": {
-    "composite": true,
-    "skipLibCheck": true
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "build:web": "pnpm --filter web build",
+    "lint:web": "pnpm --filter web lint",
+
+    "dev:api": "cd apps/ingest-api && uv run uvicorn ingest_api.main:app --reload --port 8000",
+
+    "compose:up": "docker compose -f infra/docker-compose.yml --env-file infra/.env up",
+    "compose:down": "docker compose -f infra/docker-compose.yml --env-file infra/.env down",
   }
 }

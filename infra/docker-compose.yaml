@@ -33,7 +33,7 @@ services:
 
   web:
     build: ../apps/web
-    env_file: .env
+    env_file: ../apps/web/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,6 +41,8 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    volumes:
+      - uploads:${FILE_STORAGE_DIR}
 
   websocket:
     build: ../apps/websocket-server
@@ -62,6 +64,19 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
+    volumes:
+      - uploads:${FILE_STORAGE_DIR}
+  
+  worker:
+    build: ../apps/worker
+    env_file: ./infra/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads:${FILE_STORAGE_DIR}           # read the uploaded files
+
 
 volumes:
   pgdata:
+  uploads:
