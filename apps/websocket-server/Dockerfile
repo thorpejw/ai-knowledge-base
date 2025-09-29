@@ -6,6 +6,6 @@ RUN npm install -g pnpm tsx
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 
-COPY ws-server.ts ./ws-server.ts
+COPY /apps/websocket-server/ws-server.ts ./ws-server.ts
 
 CMD ["pnpm", "tsx", "ws-server.ts"]
