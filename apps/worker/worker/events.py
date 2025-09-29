@@ -6,8 +6,11 @@ Why: Day 5 will replace the fake WS updates by subscribing to these events. :con
 
 from .models import ProgressEvent
 from .redis_queue import publish
+import logging
 
 EVENTS_CHANNEL = "events:jobs"
+
+logging.basicConfig(level=logging.INFO)
 
 def emit(stage: ProgressEvent) -> None:
     """Serialize and publish a ProgressEvent to EVENTS_CHANNEL."""
@@ -18,6 +21,7 @@ def step(job_id: str, document_id: str, user_id: str, status: str, progress: int
     """Ergonomic wrapper to build + emit a ProgressEvent with common fields."""
     if not (0 <= progress <= 100):
         raise ValueError("Progress must be between 0 and 100.")
+    
     event = ProgressEvent(
         jobId=job_id,
         documentId=document_id,

@@ -9,9 +9,9 @@ ENV PATH="/root/.local/bin:${PATH}"
 
 # Deps
 COPY pyproject.toml ./
-RUN uv sync --frozen || uv sync  # first build may not have a lockfile yet
-
-# App code
+COPY uv.lock ./
 COPY worker ./worker
+
+RUN uv sync --frozen || uv sync
 
 CMD ["uv", "run", "python", "-m", "worker.main"]

@@ -11,12 +11,12 @@ requires-python = ">=3.11"
 dependencies = [
   "pydantic>=2",
   "redis>=5",
-  "httpx>=0.27",         # will be handy later for APIs
-  "backoff>=2",          # retries (Week 3 Day 3)
+  "httpx>=0.27",         
+  "backoff>=2",          
   "structlog>=24",       # structured logs (Week 6 polish too)
-  "pypdf>=5",            # PDF parsing (today)
-  "openai",            # added Day 3
-  "pinecone-client",   # added Day 4
+  "pypdf>=5",           
+  "openai",            
+  "pinecone",   
 ]
 
 [tool.uv]  # you’re already using uv in this repo

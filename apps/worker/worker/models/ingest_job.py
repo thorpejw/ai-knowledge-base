@@ -11,4 +11,5 @@ from typing import Literal, Optional
 class IngestJob(BaseModel):
     # Enqueued by web (Week 2). Holds the minimal info to find the file on disk. :contentReference[oaicite:4]{index=4}
     documentId: str = Field(..., alias="documentId")
+    documentName: str = Field(..., alias="documentName")
     userId: str = Field(..., alias="userId")

@@ -69,7 +69,7 @@ services:
   
   worker:
     build: ../apps/worker
-    env_file: ./infra/.env
+    env_file: .env
     depends_on:
       redis:
         condition: service_healthy

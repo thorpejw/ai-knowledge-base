@@ -29,7 +29,7 @@ def pop_next_job(timeout_seconds: int = 5) -> Optional[dict]:
     Returns dict like {"documentId": "...", "userId": "..."} or None on timeout.
     """
     client = get_client()
-    result = client.blpop("jobs:ingest:file", timeout=timeout_seconds)
+    result = client.blpop("jobs:ingest:file", timeout_seconds)
     if result:
         _, payload = result
         try:
@@ -42,4 +42,4 @@ def pop_next_job(timeout_seconds: int = 5) -> Optional[dict]:
 def publish(channel: str, payload: dict) -> None:
     """Publish a JSON message to a Redis pub/sub channel (e.g., 'events:jobs')."""
     client = get_client()
-    client.publush(channel, json.dumps(payload))
+    client.publish(channel, json.dumps(payload))
