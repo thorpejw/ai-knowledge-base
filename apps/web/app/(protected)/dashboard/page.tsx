@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation"
-import { auth } from "@/lib/auth"
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/lib/auth";
+import { pris } from "@/lib/prisma"
 
 export default async function DashboardPage() {
-  const session = await auth()
+  console.log('config is ' , authConfig);
+  const session = await getServerSession(authConfig);
+  console.log("sessioon", session);
   if (!session?.user) {
     redirect("/api/auth/signin")
   }

@@ -1,26 +1,23 @@
 FROM node:20-alpine
-
 WORKDIR /app
 
-# Copy root manifests
-COPY pnpm-lock.yaml package.json ./
+# Copy root manifests for workspace install
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Ensure the apps/web dir exists
-RUN mkdir -p apps/web
+# Copy app-specific manifest (so layer cache busts only when web deps change)
+COPY apps/web/package.json ./apps/web/package.json
 
-# Copy only web’s manifest first
-COPY apps/web/package.json apps/web/node_modules/ apps/web/
+# Install all workspace deps
+RUN npm i -g pnpm && pnpm install --frozen-lockfile
 
-# Install pnpm + dependencies
-RUN npm install -g pnpm \
-  && pnpm install
 
-# Now copy the full source
-COPY apps/web apps/web
+# Copy the rest of the repo
+COPY . .
 
-WORKDIR /app/apps/web
-RUN pnpm ls next
-RUN pnpm build
+RUN pnpm --filter web exec prisma generate
+
+# Build the web app
+RUN pnpm --filter web build
 
 EXPOSE 3000
-CMD ["pnpm", "start"]
+CMD ["pnpm", "--filter", "web", "start"]

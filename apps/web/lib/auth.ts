@@ -1,22 +1,23 @@
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { PrismaClient } from "@prisma/client"
-import GitHub from "@auth/core/providers/github"
-import Credentials from "@auth/core/providers/credentials"
-import NextAuth, { type AuthOptions } from "next-auth"
+import GitHub from "next-auth/providers/github"
+import Credentials from "next-auth/providers/credentials"
+import { type AuthOptions } from "next-auth"
+import { pris } from "@/lib/prisma"
 
-const prisma = new PrismaClient()
+//const prisma = new PrismaClient()
 
 export const authConfig: AuthOptions = {
-  //adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  debug: true,
+  adapter: PrismaAdapter(pris),
+  session: { strategy: "jwt" }, //fix prisma client!!
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
-    // GitHub OAuth
     GitHub({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
     }),
 
-    // Credentials (dev-only)
     Credentials({
       name: "Credentials",
       credentials: {
@@ -26,10 +27,11 @@ export const authConfig: AuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        console.log('hit');
-        const user = await prisma.user.findUnique({
+        const user = await pris.user.findUnique({
           where: { email: credentials.email },
         })
+        console.log("authorize user:", user);
+
 
         // NOTE: dev-only, no hashing yet
         if (user && user.hash === credentials.password) {
@@ -37,12 +39,13 @@ export const authConfig: AuthOptions = {
         }
 
         if (!user) {
-          return prisma.user.create({
+          const newUser = await pris.user.create({
             data: {
               email: credentials.email,
               hash: credentials.password,
             },
-          })
+          });
+          return newUser;
         }
 
         return null
@@ -50,5 +53,3 @@ export const authConfig: AuthOptions = {
     }),
   ],
 }
-
-export const { auth } = NextAuth(authConfig)

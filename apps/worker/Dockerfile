@@ -8,10 +8,11 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
 # Deps
-COPY ./apps/worker/pyproject.toml ./
-COPY ./apps/worker/uv.lock ./
-COPY ./apps/worker ./worker
+# COPY ./apps/worker/pyproject.toml ./
+# COPY ./apps/worker/uv.lock ./
+COPY apps/worker ./apps/worker
 
+WORKDIR /app/apps/worker
 RUN uv sync --frozen || uv sync
 
 CMD ["uv", "run", "python", "-m", "worker.main"]
