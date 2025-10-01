@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth";
 import { authConfig } from "@/lib/auth";
-import { pris } from "@/lib/prisma"
 
 export default async function DashboardPage() {
   console.log('config is ' , authConfig);

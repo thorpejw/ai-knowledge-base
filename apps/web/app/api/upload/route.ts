@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   })
 
   // enqueue background job
-  await enqueueIngestJob({ documentId: document.id, userId: user.id })
+  await enqueueIngestJob({ documentId: document.id, documentName: document.name, userId: user.id })
 
   return NextResponse.json({ document })
 }

@@ -3,21 +3,13 @@ WORKDIR /app
 
 # Copy root manifests for workspace install
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/ ./apps/web/
+COPY apps/web/node_modules ./apps/web/node_modules
 
-# Copy app-specific manifest (so layer cache busts only when web deps change)
-COPY apps/web/package.json ./apps/web/package.json
+WORKDIR /app/apps/web
+RUN npm i -g pnpm && pnpm install
+RUN npx prisma generate
 
-# Install all workspace deps
-RUN npm i -g pnpm && pnpm install --frozen-lockfile
-
-
-# Copy the rest of the repo
-COPY . .
-
-RUN pnpm --filter web exec prisma generate
-
-# Build the web app
-RUN pnpm --filter web build
-
-EXPOSE 3000
-CMD ["pnpm", "--filter", "web", "start"]
+# Build the web apps
+RUN pnpm build
+CMD ["pnpm", "run", "dev"]

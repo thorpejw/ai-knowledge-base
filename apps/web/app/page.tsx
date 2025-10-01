@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect } from "react"
+import { signOut } from "next-auth/react"
 
 export default function Home() {
   useEffect(() => {
@@ -19,7 +20,11 @@ export default function Home() {
         <Link href="/upload" className="underline text-blue-600">
           Go to Uploads
         </Link>
+        <button onClick={() => signOut()}>
+      Sign out
+    </button>
       </div>
+      
     </main>
   )
 }

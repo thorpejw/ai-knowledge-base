@@ -2,6 +2,7 @@ import { getRedisClient } from "./redis"
 
 export type IngestJob = {
   documentId: string
+  documentName: string
   userId: string
 }
 
