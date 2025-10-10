@@ -1,43 +1,94 @@
-import { WebSocketServer, WebSocket } from "ws"
+/**
+ * ws-server.ts
+ * Purpose: Bridge Redis pub/sub (events:jobs) → WebSocket clients.
+ * Clients send: { type: "subscribe", jobId: string }
+ * Server forwards only matching job updates to those subscribers.
+ */
 
-const PORT = process.env.WS_PORT ? Number(process.env.WS_PORT) : 3001
-const wss = new WebSocketServer({ port: PORT })
+import { WebSocketServer, WebSocket } from "ws";
+import { createClient } from "redis";
 
-function publishJobStatus(ws: WebSocket, jobId: string) {
-  const updates = [
-    { type: "job", jobId, status: "queued", progress: 0 },
-    { type: "job", jobId, status: "processing", progress: 50 },
-    { type: "job", jobId, status: "done", progress: 100 },
-  ]
+type JobEvent = {
+  type: "job";
+  jobId: string;          // documentId as jobId in our worker
+  status:
+    | "queued"
+    | "parsing"
+    | "chunking"
+    | "embedding"
+    | "indexing"
+    | "ready"
+    | "error";
+  progress: number;       // 0..100
+  message?: string;
+  documentId?: string;
+  userId?: string;
+};
 
-  updates.forEach((update, idx) => {
-    setTimeout(() => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(update))
-      }
-    }, idx * 1500) // 0s, 1.5s, 3s
-  })
+const PORT = process.env.WS_PORT ? Number(process.env.WS_PORT) : 3001;
+const REDIS_URL = process.env.REDIS_URL;
+if (!REDIS_URL) throw new Error("REDIS_URL not set");
+
+// Track who subscribed to which jobId
+const subscribers = new Map<string, Set<WebSocket>>();
+
+function addSubscriber(jobId: string, ws: WebSocket) {
+  let set = subscribers.get(jobId);
+  if (!set) {
+    set = new Set();
+    subscribers.set(jobId, set);
+  }
+  set.add(ws);
 }
 
-function handleClientMessage(ws: WebSocket, message: string) {
-  try {
-    const data = JSON.parse(message)
-    if (data.type === "subscribe" && data.jobId) {
-      console.log(`Client subscribed to job ${data.jobId}`)
-      publishJobStatus(ws, data.jobId)
-    } else {
-      console.log("Unknown message:", data)
-    }
-  } catch (err) {
-    console.error("Invalid message from client:", message)
+function removeSubscriber(ws: WebSocket) {
+  for (const set of subscribers.values()) set.delete(ws);
+}
+
+function broadcastTo(jobId: string, payload: JobEvent) {
+  const set = subscribers.get(jobId);
+  if (!set) return;
+  const data = JSON.stringify(payload);
+  for (const ws of set) {
+    if (ws.readyState === WebSocket.OPEN) ws.send(data);
   }
 }
 
+const wss = new WebSocketServer({ port: PORT });
 wss.on("connection", (ws) => {
-  console.log("WS: client connected")
-  ws.on("message", (msg) => {
-    handleClientMessage(ws, msg.toString())
-  })
-})
+  ws.on("message", (raw) => {
+    try {
+      const data = JSON.parse(raw.toString());
+      if (data?.type === "subscribe" && typeof data.jobId === "string") {
+        console.log(`Client subscribed to job ${data.jobId}`);
+        addSubscriber(data.jobId, ws);
+        // Optional: send an immediate ack
+        ws.send(JSON.stringify({ type: "subscribed", jobId: data.jobId }));
+      }
+    } catch (err) {
+      console.error("Invalid WS message:", err);
+    }
+  });
 
-console.log(`✅ WebSocket server running at ws://0.0.0.0:${PORT}`)
+  ws.on("close", () => removeSubscriber(ws));
+});
+
+console.log(`✅ WS server at ws://0.0.0.0:${PORT}`);
+
+// --- Redis pub/sub: forward worker events to WS clients ---
+(async () => {
+  const sub = createClient({ url: REDIS_URL });
+  sub.on("error", (e) => console.error("Redis subscriber error:", e));
+  await sub.connect();
+  await sub.subscribe("events:jobs", (message) => {
+    try {
+      const evt: JobEvent = JSON.parse(message);
+      if (evt?.type === "job" && evt.jobId) {
+        broadcastTo(evt.jobId, evt);
+      }
+    } catch (e) {
+      console.error("Bad event payload on events:jobs:", e, message);
+    }
+  });
+  console.log("📡 Subscribed to Redis channel: events:jobs");
+})();

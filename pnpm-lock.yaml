@@ -98,6 +98,9 @@ importers:
 
   apps/websocket-server:
     dependencies:
+      redis:
+        specifier: ^5.8.2
+        version: 5.8.2
       we:
         specifier: ^1.5.10
         version: 1.5.10
